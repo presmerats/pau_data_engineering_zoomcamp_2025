@@ -3,7 +3,10 @@
 # Project data
 yellow_tripdata_2021-01.csv
 *.csv
+*.csv.1
+*.csv.2
 *data/ny_taxi_postgres_data/
+01-docker-terraform/2_docker_sql/05_docker_compose/data/
 
 
 
