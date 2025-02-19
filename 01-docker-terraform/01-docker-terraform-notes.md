@@ -1002,21 +1002,36 @@ I will still authenticate¿ and run terraform
 
 #### Terraform tests 
 
+You need to modify all project, creds file, and bucket name in variables.tf
+
 ```bash
-cd data-engineering-zoomcamp/01-docker-terraform/1_terraform_gcp/terraform/terraform_basic/
+cd data-engineering-zoomcamp/01-docker-terraform/1_terraform_gcp/terraform/terraform_with_variables/
 terraform init
 terraform plan
+terraform apply
 ```
 
 What I need to do is the following:
 
 * ~~copy the terraform with variables folder to this personal repo?~~
 * ~~IN fact copy the rest of the repo into this repo, so that everything is here?~~
-* modify the variables accordingly
-* push to github ? (so it is a backup)
-* git clone into the instance 
-* then run terraform from there
+* ~~modify the variables accordingly~~
+* ~~push to github ? (so it is a backup)~~
+* ~~git clone into the instance ~~
+* ~~then run terraform from there~~
 
+Then you can see the bucket in GCP console Cloud Storage/Buckets
+
+Init git user to commit from changes done in the repo from the instance?
+
+
+### Stopping the instance
+
+```bash
+sudo shutdown -h now
+````
+
+or do it through the console
 
 
 Github Codespaces
