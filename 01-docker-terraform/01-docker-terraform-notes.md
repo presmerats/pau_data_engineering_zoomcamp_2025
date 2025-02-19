@@ -651,6 +651,39 @@ Other concepts that are seen:
 Terraform
 =========
 
+Terraform overview
+-----------------
+
+IaS
+* simplicity in keeping track of infra
+* easier collaboration (github review, pull req, deploy)
+* reproducibility
+* ensure resources are removed
+* DOES NOT deploy or update code
+* DOES NOT change immutable resources (change virtual machine type, move data stored,)
+* DOES NOT Managed resources not defined in your terraform file (things you create outside will not be controlled by terraform)
+
+Components
+* locally you install terraform files to connect to a cloud provider
+* You need authorization
+
+Provides
+* code that allows you to comunicate and manage resources in cloud providers/platforms:
+    * AWS, Azure, GCP
+    * Kubenetes
+    * VSphere
+    * Alibaba Cloud
+    * Oracle Cloud Infrastructure
+    * Active Directory
+
+Key Terraform commads:
+* **init** - get me the providers I need. Will get the providers code and install it in your machine
+* **plan** - plan what resources are going to be created
+* **apply** - actaully build the infra described in the tf files 
+* **destroy** - remove all infrastructure defined
+
+Terraform Basics: Simple one file Terraform Deployment
+-----------------------------
 
 
 
@@ -683,6 +716,308 @@ Big Query
             - yellow_tripdate_2019 
 
         those will be generated during the course
+
+
+GCP Setup
+----------
+
+### GCP account setup & instance
+
+[SOURCE](https://www.youtube.com/watch?v=ae-CV2KfoN0&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=15)
+
+new google account + credit card = 289$ to use in 90days
+
+Go to VM -> enable API
+
+Create SSH keys [GCP Create SSH keys instruccions](https://cloud.google.com/compute/docs/connect/create-ssh-keys):
+
+* Choose authentication (?)
+* generate the keys ```bash ssh-keygen -t rsa -f ~/.ssh/de_zoomcamp_gcp_key -C dezoomer ```
+* Go to Cloud Engine/MEtadata/Add ssh keys
+
+
+Create an instance:
+
+* VM instances /Create instance
+* Machine configuration
+  * name + zone - >europe berlin (green energy)
+  * 4cpu (2 cores) 16GB -> 21cents per hour, 150 per month
+* OS and storage:
+  * set bootdisk to ubuntu(optional)
+  * 30GB since we are downloading a lot of files
+* NO more changes -> CREATE
+* copy external ip
+* then ssh into it ```bash ssh -i ~/.ssh/de_zoomcamp_gcp_key deezoomer@XX.XX.XX.XX```
+
+
+* Add ~/.ssh/config
+  * open in vscode
+  * configure access to this ssh 
+```bash
+Host de-zoomcamp
+  Hostname XX.XX.XX.XX
+  User dezoomer
+  IdentityFile ~/.ssh/de_zoomcamp_gcp_key
+```
+
+
+
+### Install needed software
+
+* htop to check
+* download Anaconda
+  * Anaconda webpage -> wget command 
+  * logout and login or source .bashrc
+
+install docker 
+```bash
+sudo apt-get update 
+sudo apt-get install docker.io
+```
+
+vscode to access this machine
+* extensions /remote ssh (from Microsoft)
+* command+shift+P / Connect to host / -> use the ssh config 
+
+Clone github repo ```bash git clone https://github.com/DataTalksClub/data-engineering-zoomcamp.git```
+
+
+configure docker:
+* [docker without sudo ](https://docs.docker.com/engine/install/linux-postinstall/)
+```bash
+sudo groupadd docker
+sudo usermod -aG docker $USER
+````
+
+Now logout and log back or run  ```bash newgrp docker```
+
+Then verify the installation
+```bash
+docker run hello-world
+```
+Install [docker-compose](https://github.com/docker/compose?tab=readme-ov-file#linux):
+```bash
+mkdir bin
+cd bin
+wget https://github.com/docker/compose/releases/download/v2.33.0/docker-compose-linux-x86_64 -O docker_compose
+chmod +x docker_compose
+```
+Check it's executable
+```bash
+./docker_compose version
+````
+
+Update PATH envvar in .bashrc file wiht ```bash vim .bashrc ``` add at the end:
+```bash
+export PATH="${HOME}/bin:${PATH}"
+```
+
+Then you can test it, first do ```bash source ~/.bashrc```then ```bash docker-compose version```
+
+Then check
+```bash 
+cd 01-docker-terraform/2_docker_sql/
+docker-compose up -d
+```
+
+check with 
+```bash
+docker ps
+```
+
+Now install pgcli
+```bash
+pip install pgcli
+pgcli
+>\dt
+```
+And you can see the schema there.
+
+Or install with conda
+```bash
+pip uninstall pgcli
+conda install -c conda-forge pgcli
+# not needed for me
+# pip install -U mycli 
+```
+
+Then check it 
+Using `pgcli` to connect to Postgres
+
+```bash
+pgcli -h localhost -p 5432 -u root -d ny_taxi
+```
+
+### Port forwarding
+
+Setup port forwarding to a local machine now
+
+From the vscode instance connected to the remote machine, 
+* open the termina (Ctrl+tilda) 
+* then click on ports 
+* then add port forwarding 5432 to localhost:5432
+* then test locally ```bash pgcli -h localhost -p 5432 -u root -d ny_taxi``` 
+
+
+REview of port forwarding:
+
+Local port forwarding (my local port is forwarded to the remote machine). This example opens a connection to the gw.example.com jump server, and forwards any connection to port 80 on the local machine to port 80 on intra.example.com:
+```bash
+ssh -L 80:intra.example.com:80 gw.example.com
+```
+For the pgadmin it is 
+```bash 
+ssh -L 8080:localhost:8080 de-zoomcap
+```
+So it connect to de-zommcamp, and forward a local connection to 8080 to localhost on de-zoomcamp:8080
+
+
+REmote port forwarding, remote machine can connect to his/her localhost:80 and this will be forwarded to localhost:8080
+```bash
+ssh -R 8080:localhost:80 public.example.com
+```
+
+### Jupyter notebook
+
+Go to  week 1 2_docker_sql folder and run jupyter notebook
+```bash
+cd 01-docker-terrafomr/2_docker_sql
+jupyter notebook
+```
+
+Copy the url with the token, then create another port forwarding at port 8888.
+
+Download the data
+```bash
+wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz
+gzip -d yellow_tripdata_2021-01.csv.gz
+head yellow_tripdata_2021-01.csv
+wc -
+```
+
+Install psycopg2
+```bash
+ pip install psycopg2-binary
+ ``` 
+
+Then run the notebook
+* create the schema and check with local connection to pgcli
+* insert 100 rows and check
+
+
+### Terraform install
+
+1. Go to [](https://developer.hashicorp.com/terraform/install#linux) and copy link to amd64 executable file for linux
+2. Wget this file into our /bin folder
+3. sudo apt-get install unzip and unzip the file
+
+
+We need the credentials terraform or GCP file ? WHere is that?
+* follow the instructions here: data_engieering_zoomcamp/01-docker-terraform/1_terraform_gcp/2_gcp_overview.md
+* GCP copy project ID
+* GCP service account impersonation [link](https://cloud.google.com/docs/authentication/use-service-account-impersonation)
+
+
+We are going to setup the glcloud api/service-account within the instance, so that it can use terraform to run comands right?
+
+#### Initial Setup
+
+For this course, we'll use a free version (upto EUR 300 credits). 
+
+1. Create an account with your Google email ID 
+2. Setup your first [project](https://console.cloud.google.com/) if you haven't already
+    * eg. "DTC DE Course", and note down the "Project ID" (we'll use this later when deploying infra with TF)
+3. Setup [service account & authentication](https://cloud.google.com/docs/authentication/getting-started) for this project
+    * Grant `Viewer` role to begin with. (Don't know how to do it, see the Setup for Access part)
+    * Download service-account-keys (.json) for auth. (inside IAM/Service Account you can download them)
+4. Download [SDK](https://cloud.google.com/sdk/docs/quickstart) for local setup
+5. Set environment variable to point to your downloaded GCP keys:
+   ```shell
+   export GOOGLE_APPLICATION_CREDENTIALS="<path/to/your/service-account-authkeys>.json"
+   
+   # Refresh token/session, and verify authentication
+   gcloud auth application-default login
+   ```
+   
+#### Setup for Access
+ 
+1. [IAM Roles](https://cloud.google.com/storage/docs/access-control/iam-roles) for Service account:
+   * Go to the *IAM* section of *IAM & Admin* https://console.cloud.google.com/iam-admin/iam
+   * Click the *Edit principal* icon for your service account.
+   * Add these roles in addition to *Viewer* : **Storage Admin** + **Storage Object Admin** + **BigQuery Admin**
+   
+2. Enable these APIs for your project:
+   * https://console.cloud.google.com/apis/library/iam.googleapis.com
+   * https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com
+   
+3. Please ensure `GOOGLE_APPLICATION_CREDENTIALS` env-var is set.
+   ```shell
+   export GOOGLE_APPLICATION_CREDENTIALS="<path/to/your/service-account-authkeys>.json"
+   ```
+
+Obs: the path to your service-account-authkeys was:
+
+* /Users/pau/.gc/hypnotic-runway-451217-r0-0b3a826d7875.json
+
+And has been changed to 
+
+* /Users/pau/.config/gcloud/application_default_credentials.json
+
+
+ 
+
+Now we transfer the json credential files. Put yourself in the folder with the json credentials file and then:
+```bash
+sftp de-zoomcamp
+mkdir .gc
+cd .gc
+put hypnotic-runway-451217-r0-0b3a826d7875.json
+```
+
+stoped at 42:50 minut
+
+
+Now ssh into the instance and run google cloud authentication for gcloud:
+```bash
+# first setup the GOOGLE_APPLICATION_CREDENTIALS
+echo "export GOOGLE_APPLICATION_CREDENTIALS=/home/dezoomer/.gc/hypnotic-runway-451217-r0-0b3a826d7875.json" >> /home/dezoomer/.bashrc
+# Doesn't work anymore
+#gcloud auth authenticate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS
+gcloud auth application-default login
+```
+It says that it is already authenticated?
+```
+You are running on a Google Compute Engine virtual machine.
+The service credentials associated with this virtual machine
+will automatically be used by Application Default
+Credentials, so it is not necessary to use this command.
+
+If you decide to proceed anyway, your user credentials may be visible
+to others with access to this virtual machine. Are you sure you want
+to authenticate with your personal account?
+```
+
+I will still authenticate¿ and run terraform
+
+
+#### Terraform tests 
+
+```bash
+cd data-engineering-zoomcamp/01-docker-terraform/1_terraform_gcp/terraform/terraform_basic/
+terraform init
+terraform plan
+```
+
+What I need to do is the following:
+
+* ~~copy the terraform with variables folder to this personal repo?~~
+* ~~IN fact copy the rest of the repo into this repo, so that everything is here?~~
+* modify the variables accordingly
+* push to github ? (so it is a backup)
+* git clone into the instance 
+* then run terraform from there
+
+
 
 Github Codespaces
 ================

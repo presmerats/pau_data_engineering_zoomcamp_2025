@@ -1,3 +1,12 @@
+.DS_Store
+
+# Project data
+yellow_tripdata_2021-01.csv
+*.csv
+*data/ny_taxi_postgres_data/
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
